@@ -18,7 +18,40 @@ namespace aim::b1 {
 
 
 // BEGIN IMPLEMENTATION
-bool parse_i32(const std::string& text, int& output) { throw std::runtime_error("TODO"); }
+// aim-cpp-cw
+bool parse_i32(const std::string& text, int& output) {
+    if (text.empty()) {
+        return false;
+    }
+    std::size_t position = 0;
+    bool negative = false;
+    if (text[0] == '+' || text[0] == '-') {
+        negative = text[0] == '-';
+        position = 1;
+    }
+    if (position == text.size()) {
+        return false;
+    }
+
+    // 负数端点的绝对值比正数端点大 1，使用 long long 保存幅值。
+    const long long limit = negative ? 2147483648LL : 2147483647LL;
+    long long magnitude = 0;
+    for (; position < text.size(); ++position) {
+        const char character = text[position];
+        if (character < '0' || character > '9') {
+            return false;
+        }
+        const int digit = character - '0';
+        // 先判断下一步是否超界，再执行乘法和加法。
+        if (magnitude > (limit - digit) / 10) {
+            return false;
+        }
+        magnitude = magnitude * 10 + digit;
+    }
+    const long long value = negative ? -magnitude : magnitude;
+    output = static_cast<int>(value); // 只有全部验证成功才改写输出。
+    return true;
+}
 // END IMPLEMENTATION
 }
 
