@@ -18,7 +18,37 @@ namespace aim::q6 {
 struct Target { int id; int x; int y; int hp; bool visible; };
 
 // BEGIN IMPLEMENTATION
-int select_target(const std::vector<Target>& targets, int max_range) { throw std::runtime_error("TODO"); }
+// aim-cpp-cw
+int select_target(const std::vector<Target>& targets, int max_range) {
+    if (max_range < 0) {
+        return -1;
+    }
+    const long long range_sq = 1LL * max_range * max_range;
+    int best_id = -1;
+    int best_hp = 0;
+    long long best_distance_sq = 0;
+    for (const Target& target : targets) {
+        if (!target.visible || target.hp <= 0) {
+            continue;
+        }
+        const long long distance_sq = 1LL * target.x * target.x
+                                    + 1LL * target.y * target.y;
+        if (distance_sq > range_sq) {
+            continue;
+        }
+        // 没有候选时直接选入；否则严格按血量、距离、编号比较。
+        if (best_id == -1
+            || target.hp < best_hp
+            || (target.hp == best_hp && distance_sq < best_distance_sq)
+            || (target.hp == best_hp && distance_sq == best_distance_sq
+                && target.id < best_id)) {
+            best_id = target.id;
+            best_hp = target.hp;
+            best_distance_sq = distance_sq;
+        }
+    }
+    return best_id;
+}
 // END IMPLEMENTATION
 }
 
