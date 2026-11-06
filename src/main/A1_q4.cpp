@@ -18,7 +18,48 @@ namespace aim::q4 {
 struct CommandResult { long long value; int accepted; int rejected; };
 
 // BEGIN IMPLEMENTATION
-CommandResult execute(const std::vector<std::string>& lines) { throw std::runtime_error("TODO"); }
+// aim-cpp-cw
+CommandResult execute(const std::vector<std::string>& lines) {
+    CommandResult result{0, 0, 0};
+    for (const std::string& line : lines) {
+        std::istringstream input(line);
+        std::string operation;
+        long long candidate = result.value;
+        bool valid = static_cast<bool>(input >> operation);
+
+        if (valid && (operation == "ADD" || operation == "SET")) {
+            long long argument = 0;
+            valid = static_cast<bool>(input >> argument);
+            if (valid) {
+                valid = argument >= -1000000 && argument <= 1000000;
+            }
+            if (valid) {
+                candidate = operation == "ADD" ? result.value + argument : argument;
+            }
+        } else if (valid && operation == "RESET") {
+            candidate = 0;
+        } else {
+            valid = false;
+        }
+
+        // 数字提取成功仍可能留下小数或字母尾缀，必须检查整行。
+        std::string extra;
+        if (valid && (input >> extra)) {
+            valid = false;
+        }
+        if (candidate < -1000000 || candidate > 1000000) {
+            valid = false;
+        }
+
+        if (valid) {
+            result.value = candidate; // 只有所有检查通过才提交。
+            ++result.accepted;
+        } else {
+            ++result.rejected;
+        }
+    }
+    return result;
+}
 // END IMPLEMENTATION
 }
 
