@@ -18,7 +18,52 @@ namespace aim::q2 {
 struct LabelEdit { std::string from; std::string to; };
 
 // BEGIN IMPLEMENTATION
-std::string edit_labels(std::string labels, const std::vector<LabelEdit>& edits) { throw std::runtime_error("TODO"); }
+// aim-cpp-cw
+std::string edit_labels(std::string labels, const std::vector<LabelEdit>& edits) {
+    for (const LabelEdit& edit : edits) {
+        if (edit.from.empty()) {
+            if (!edit.to.empty()) {
+                if (!labels.empty()) {
+                    labels += ',';
+                }
+                labels += edit.to;
+            }
+            continue;
+        }
+
+        std::size_t start = 0;
+        while (start < labels.size()) {
+            const std::size_t comma = labels.find(',', start);
+            const std::size_t end = comma == std::string::npos
+                                  ? labels.size() : comma;
+            const std::size_t length = end - start;
+
+            // 比较整个标签，避免将 cam 匹配到 cam2。
+            const bool matches = labels.substr(start, length) == edit.from;
+            if (matches) {
+                if (!edit.to.empty()) {
+                    labels.replace(start, length, edit.to);
+                } else if (start == 0) {
+                    if (comma != std::string::npos) {
+                        labels.erase(0, comma + 1);
+                    } else {
+                        labels.clear();
+                    }
+                } else {
+                    // 连同当前标签前面的逗号一起删除。
+                    labels.erase(start - 1, length + 1);
+                }
+                break; // 一条编辑只处理第一次命中。
+            }
+
+            if (comma == std::string::npos) {
+                break;
+            }
+            start = comma + 1;
+        }
+    }
+    return labels;
+}
 // END IMPLEMENTATION
 }
 
